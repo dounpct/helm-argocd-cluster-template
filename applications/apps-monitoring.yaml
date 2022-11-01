@@ -1,0 +1,96 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana
+spec:
+  project: monitoring
+  source:
+    path: 'grafana'
+    repoURL: 'https://github.com/dounpct/helm-argocd-cluster-template.git'
+    targetRevision: master
+    plugin:
+      name: avp-gsm-git
+      env:
+        - name:  INIT_ARGS
+          value: "helm dep update"
+        - name:  ARG_PARAMETERS
+          value: "helm template grafana -n grafana . -f values/values.yaml "
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: grafana
+  syncPolicy: 
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+spec:
+  project: monitoring
+  source:
+    path: 'loki'
+    repoURL: 'https://github.com/dounpct/helm-argocd-cluster-template.git'
+    targetRevision: master
+    plugin:
+      name: avp-gsm-git
+      env:
+        - name:  INIT_ARGS
+          value: "helm dep update"
+        - name:  ARG_PARAMETERS
+          value: "helm template loki -n loki . -f values/values.yaml "
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: loki
+  syncPolicy: 
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: promtail
+spec:
+  project: monitoring
+  source:
+    path: 'promtail'
+    repoURL: 'https://github.com/dounpct/helm-argocd-cluster-template.git'
+    targetRevision: master
+    plugin:
+      name: avp-gsm-git
+      env:
+        - name:  INIT_ARGS
+          value: "helm dep update"
+        - name:  ARG_PARAMETERS
+          value: "helm template promtail -n promtail . -f values/values.yaml "
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: promtail
+  syncPolicy: 
+    syncOptions:
+      - CreateNamespace=true
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: loki-stack
+# spec:
+#   project: monitoring
+#   source:
+#     path: 'loki-stack'
+#     repoURL: 'https://github.com/dounpct/helm-argocd-cluster-template.git'
+#     targetRevision: master
+#     plugin:
+#       name: avp-gsm-git
+#       env:
+#         - name:  INIT_ARGS
+#           value: "helm dep update"
+#         - name:  ARG_PARAMETERS
+#           value: "helm template loki-stack -n loki-stack . -f values/values.yaml "
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: loki-stack
+#   syncPolicy: 
+#     syncOptions:
+#       - CreateNamespace=true

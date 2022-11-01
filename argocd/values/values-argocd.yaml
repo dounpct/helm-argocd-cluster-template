@@ -1,0 +1,207 @@
+fullnameOverride: argocd
+argo-cd:
+  global:
+    image:
+      tag: v2.2.5
+    additionalLabels:
+      app: argocd
+  server:
+    configEnabled : true
+    extraArgs:
+      - --insecure
+    config:
+      url: https://argocd-portal.domain.local
+      configManagementPlugins: |-
+        - name: avp-gsm-git
+          init:
+            command: ["/bin/sh", "-c"]
+            args: ["$INIT_ARGS"]
+          generate:
+            command: [sh, -c]
+            args: ["$ARG_PARAMETERS | argocd-vault-plugin generate - "]        
+        - name: avp-gsm-yaml
+          generate:
+            command: [sh, -c]
+            args: ["argocd-vault-plugin generate ./ "]        
+    #   dex.config: |        
+    #     connectors:
+    #     - type: ldap
+    #       name: TDG-LDAP
+    #       id: ldap
+    #       config:
+    #         host: 10.198.101.52:389
+    #         insecureNoSSL: true
+    #         insecureSkipVerify: true
+    #         bindDN: $dex.ldap.userdn  #'CN=<username-here>,OU=Services,OU=Users,OU=TrueDigital,DC=truedigital,DC=group'
+    #         bindPW: $dex.ldap.password
+    #         usernamePrompt: User Name
+    #         userSearch:
+    #           baseDN: "OU=Users,OU=Truedigital,DC=truedigital,DC=group"
+    #           filter: ""
+    #           username: sAMAccountName
+    #           idAttr: DN
+    #           emailAttr: SAMACCOUNTNAME
+    #           nameAttr: name
+    #         groupSearch:
+    #           baseDN: "OU=Groups,OU=Truedigital,DC=truedigital,DC=group"
+    #           filter: "(objectClass=group)"
+    #           userAttr: DN
+    #           groupAttr: member
+    #           nameAttr: name
+    # rbacConfig:
+    #   policy.csv: |
+    #     # Global Role
+    #     p, role:org-nosync, applications, sync, */*, deny
+
+    #     p, role:org-admin, *, *, *, allow
+        
+    #     p, role:team-devops, projects, get, devops-project-*, allow
+    #     p, role:team-devops, projects, get, devops-project-alpha, allow
+    #     p, role:team-devops, projects, get, devops-project-preprod, allow
+    #     p, role:team-devops, projects, get, devops-project-prod, allow
+    #     p, role:team-devops, applications, *, devops-project-dev/*, allow
+    #     p, role:team-devops, applications, *, devops-project-alpha/*, allow
+    #     p, role:team-devops, applications, *, devops-project-preprod/*, allow
+    #     p, role:team-devops, applications, *, devops-project-prod/*, allow
+
+    #     # Role Binding
+    #     g, TDG-BU-TECH-OPERATIONS-DEVOPS, role:org-admin  
+        
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 300m
+        memory: 256Mi
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 4
+      targetCPUUtilizationPercentage: 50
+      targetMemoryUtilizationPercentage: 60
+    
+  repoServer:
+    volumes:
+      - name: custom-tools-avp
+        emptyDir: {}
+      - name: argocd-vault-profiles
+        secret:
+          secretName: argocd-vault-profiles
+    initContainers:
+      - name: download-tools-avp
+        image: alpine:3.8
+        command: [sh, -c]
+        args:
+          - >-
+            wget -O argocd-vault-plugin
+            https://github.com/IBM/argocd-vault-plugin/releases/download/v1.7.0/argocd-vault-plugin_1.7.0_linux_amd64 &&
+            chmod +x argocd-vault-plugin &&
+            mv argocd-vault-plugin /custom-tools-avp/
+        volumeMounts:
+          - mountPath: /custom-tools-avp
+            name: custom-tools-avp
+    volumeMounts:
+      - name: custom-tools-avp
+        mountPath: /usr/local/bin/argocd-vault-plugin
+        subPath: argocd-vault-plugin
+      - mountPath: /app/config/avp
+        name: argocd-vault-profiles
+        readOnly: true
+    env:  
+      - name: "GODEBUG"
+        value: "x509ignoreCN=0"
+      - name: "AVP_TYPE"
+        value: "gcpsecretmanager"
+      - name: "GOOGLE_APPLICATION_CREDENTIALS"
+        value: "/app/config/avp/gcp-dmp-devops.json"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 300m
+        memory: 256Mi
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 4
+      targetCPUUtilizationPercentage: 50
+      targetMemoryUtilizationPercentage: 60
+  
+  redis:
+    securityContext: false
+
+  redis-ha:
+    enabled: true
+
+  controller:
+    enableStatefulSet: true
+
+  configs:
+    # secret:
+    #   extra:
+    #     dex.ldap.userdn: <path:projects/362159383816/secrets/tdg_ldap_userdn#tdg_ldap_userdn>
+    #     dex.ldap.password: <path:projects/362159383816/secrets/tdg_ldap_password#tdg_ldap_password>
+    
+    # tlsCerts:
+    #   data:
+    #     tdg-docker-registry.aaa.dmp.true.th: <path:projects/362159383816/secrets/harbor_aaa_tls#harbor_aaa_tls>
+    
+    credentialTemplates:
+      bitbucket-truedmp:
+        url: https://bitbucket.org/truedmp
+        username: <path:projects/362159383816/secrets/bitbucket_username#bitbucket_username>
+        password: <path:projects/362159383816/secrets/bitbucket_password#bitbucket_password>
+      harbor-helm-repo:
+        url: https://tdg-docker-registry.aaa.dmp.true.th/chartrepo/library
+        username: <path:projects/362159383816/secrets/harbor_username#harbor_username>
+        password: <path:projects/362159383816/secrets/harbor_password#harbor_password>
+
+    repositories: {}
+
+    # clusterCredentials:
+    # - name: gami-np
+    #   server: https://35.240.139.5
+    #   labels: {}
+    #   annotations: {}
+    #   config:
+    #     bearerToken: ref+vault://secret/common/jenkins/argocd#argocd-gami-nonprod-cluster-sa
+    #     tlsClientConfig:
+    #       insecure: true
+    
+vaultProfiles:
+  create: true
+  profiles:
+    - filename: gcp-dmp-devops.json
+      value: <path:projects/362159383816/secrets/google_credentials_devops_cicd#google_credentials_devops_cicd | base64encode>
+
+ingress:
+  create: true
+  hosts: "argocd-portal.domain.local"
+  
+projects:
+  - projectName: root-applications
+    description: Manage ArgoCD Project and Applications
+  - projectName: argocd
+    description: ArgoCD Project
+  - projectName: nginx-ingress
+    description: Nginx Ingress
+
+applications:
+  - applicationName: app-of-apps-global
+    settings:
+      project: root-applications
+      source: 
+        repoURL: 'https://github.com/dounpct/helm-argocd-cluster-template.git'
+        path: 'applications'
+        targetRevision: master
+        directory:
+          recurse: true
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: argocd
+      syncPolicy: 
+        automated: {} 
+        syncOptions:
+          - CreateNamespace=true

@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: monitoring
+spec:
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  destinations:
+  - namespace: loki
+    server: https://kubernetes.default.svc
+  - namespace: loki-stack
+    server: https://kubernetes.default.svc
+  - namespace: grafana
+    server: https://kubernetes.default.svc
+  - namespace: promtail
+    server: https://kubernetes.default.svc
+  sourceRepos:
+  - '*'
+---

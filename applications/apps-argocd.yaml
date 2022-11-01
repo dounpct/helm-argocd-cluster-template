@@ -1,0 +1,38 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-cicd
+spec:
+  project: argocd
+  destination:
+    namespace: argocd
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: 'argocd'
+    repoURL: 'https://github.com/dounpct/helm-argocd-cluster-template.git'
+    targetRevision: master
+    plugin:
+      name: avp-gsm-git
+      env:
+        - name:  INIT_ARGS
+          value: "helm dep update"
+        - name:  ARG_PARAMETERS
+          value: "helm template argocd -n argocd . -f values/values-argocd.yaml "
+  syncPolicy: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-applicationset-cicd
+spec:
+  project: argocd
+  destination:
+    namespace: argocd
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: ''
+    repoURL: 'https://argoproj.github.io/argo-helm'
+    targetRevision: 1.6.0
+    chart: argocd-applicationset
+  syncPolicy: {}

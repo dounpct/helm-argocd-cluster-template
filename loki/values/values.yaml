@@ -1,0 +1,115 @@
+ingress:
+  create: true
+  hosts: "loki-portal.domain.local"
+
+loki-distributed:
+  loki:
+    structuredConfig:
+      ingester:
+        max_transfer_retries: 0
+        chunk_idle_period: 1h
+        chunk_target_size: 1536000
+        max_chunk_age: 1h
+      schema_config:
+        configs:
+          - object_store: gcs
+            store: boltdb-shipper
+            schema: v11
+            index:
+              prefix: index_loki_
+              period: 24h
+      storage_config:
+        boltdb_shipper:
+          shared_store: gcs
+        gcs:
+          bucket_name: jiw-test-loki-backend
+        filesystem: {}
+      compactor:
+        working_directory: /data/retention
+        shared_store: gcs
+        compaction_interval: 10m
+        retention_enabled: true
+        retention_delete_delay: 2h
+        retention_delete_worker_count: 150
+      limits_config:
+        unordered_writes: false
+
+  distributor:
+    extraEnv:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/key.json
+    extraVolumes:
+      - name: loki-access-gcs
+        secret:
+          secretName: loki-access-gcs
+    extraVolumeMounts:
+      - name: loki-access-gcs
+        mountPath: /etc/secrets
+
+  ingester:
+    extraEnv:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/key.json
+    extraVolumes:
+      - name: loki-access-gcs
+        secret:
+          secretName: loki-access-gcs
+    extraVolumeMounts:
+      - name: loki-access-gcs
+        mountPath: /etc/secrets
+
+  ruler:
+    extraEnv:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/key.json
+    extraVolumes:
+      - name: loki-access-gcs
+        secret:
+          secretName: loki-access-gcs
+    extraVolumeMounts:
+      - name: loki-access-gcs
+        mountPath: /etc/secrets
+
+  querier:
+    extraEnv:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/key.json
+    extraVolumes:
+      - name: loki-access-gcs
+        secret:
+          secretName: loki-access-gcs
+    extraVolumeMounts:
+      - name: loki-access-gcs
+        mountPath: /etc/secrets
+
+  queryFrontend:
+    extraEnv:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/key.json
+    extraVolumes:
+      - name: loki-access-gcs
+        secret:
+          secretName: loki-access-gcs
+    extraVolumeMounts:
+      - name: loki-access-gcs
+        mountPath: /etc/secrets
+
+  compactor:
+    enabled: true
+    persistence: 
+      enabled: true
+    extraEnv:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/key.json
+    extraVolumes:
+      - name: loki-access-gcs
+        secret:
+          secretName: loki-access-gcs
+    extraVolumeMounts:
+      - name: loki-access-gcs
+        mountPath: /etc/secrets
+
+  gateway:
+    service:
+    # -- Port of the gateway service
+      port: 80

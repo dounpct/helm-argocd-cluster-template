@@ -1,0 +1,24 @@
+grafana:
+  grafana.ini:
+    server:
+      root_url: https://grafana-portal.domain.local
+      domain: grafana-portal.domain.local
+  adminPassword: <path:projects/362159383816/secrets/grafana_password#grafana_password>
+  
+  persistence:
+    enabled: true
+    size: 10Gi
+    type: statefulset
+
+  # datasources:
+  #   datasources.yaml:
+  #     apiVersion: 1
+  #     datasources:
+  #       - name: prometheus-poc
+  #         type: prometheus
+  #         url: http://prometheus-poc-server.monitoring.svc.cluster.local
+  #         access: proxy
+
+ingress:
+  create: true
+  hosts: "grafana-portal.domain.local"

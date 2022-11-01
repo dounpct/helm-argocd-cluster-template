@@ -1,0 +1,8 @@
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: test-secret2
+type: Opaque
+data:
+  user: <path:projects/362159383816/secrets/bitbucket_username#bitbucket_username>
