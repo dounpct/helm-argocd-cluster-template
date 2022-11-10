@@ -1,0 +1,43 @@
+{{- /*
+--------------------------------- cluster-info -------------------------------------------
+*/}}
+
+{{ range $path, $_ :=  $.Files.Glob  "dashboards-cluster/*.json" }}
+{{- $filename := base ($path) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $filename }}-configmap
+  annotations:
+    grafana_folder: "cluster-folder"
+  labels:
+    grafana_dashboard: "1"
+data:
+  {{ $filename }}: |-
+{{ $.Files.Get $path | indent 4 }}
+---
+{{ end }}
+
+{{- /*
+--------------------------------- tools -------------------------------------------
+*/}}
+
+{{ range $path, $_ :=  $.Files.Glob  "dashboards-tools/*.json" }}
+{{- $filename := base ($path) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $filename }}-configmap
+  annotations:
+    grafana_folder: "tools"
+  labels:
+    grafana_dashboard: "1"
+data:
+  {{ $filename }}: |-
+{{ $.Files.Get $path | indent 4 }}
+---
+{{ end }}
+
+{{- /*
+--------------------------------- New Folder Of DashBoard -------------------------------------------
+*/}}
