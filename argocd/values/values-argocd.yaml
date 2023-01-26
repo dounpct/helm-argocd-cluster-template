@@ -23,49 +23,6 @@ argo-cd:
           generate:
             command: [sh, -c]
             args: ["argocd-vault-plugin generate ./ "]        
-    #   dex.config: |        
-    #     connectors:
-    #     - type: ldap
-    #       name: TDG-LDAP
-    #       id: ldap
-    #       config:
-    #         host: 10.198.101.52:389
-    #         insecureNoSSL: true
-    #         insecureSkipVerify: true
-    #         bindDN: $dex.ldap.userdn  #'CN=<username-here>,OU=Services,OU=Users,OU=TrueDigital,DC=truedigital,DC=group'
-    #         bindPW: $dex.ldap.password
-    #         usernamePrompt: User Name
-    #         userSearch:
-    #           baseDN: "OU=Users,OU=Truedigital,DC=truedigital,DC=group"
-    #           filter: ""
-    #           username: sAMAccountName
-    #           idAttr: DN
-    #           emailAttr: SAMACCOUNTNAME
-    #           nameAttr: name
-    #         groupSearch:
-    #           baseDN: "OU=Groups,OU=Truedigital,DC=truedigital,DC=group"
-    #           filter: "(objectClass=group)"
-    #           userAttr: DN
-    #           groupAttr: member
-    #           nameAttr: name
-    # rbacConfig:
-    #   policy.csv: |
-    #     # Global Role
-    #     p, role:org-nosync, applications, sync, */*, deny
-
-    #     p, role:org-admin, *, *, *, allow
-        
-    #     p, role:team-devops, projects, get, devops-project-*, allow
-    #     p, role:team-devops, projects, get, devops-project-alpha, allow
-    #     p, role:team-devops, projects, get, devops-project-preprod, allow
-    #     p, role:team-devops, projects, get, devops-project-prod, allow
-    #     p, role:team-devops, applications, *, devops-project-dev/*, allow
-    #     p, role:team-devops, applications, *, devops-project-alpha/*, allow
-    #     p, role:team-devops, applications, *, devops-project-preprod/*, allow
-    #     p, role:team-devops, applications, *, devops-project-prod/*, allow
-
-    #     # Role Binding
-    #     g, TDG-BU-TECH-OPERATIONS-DEVOPS, role:org-admin  
         
     resources:
       limits:
@@ -159,16 +116,6 @@ argo-cd:
         password: <path:projects/362159383816/secrets/harbor_password#harbor_password>
 
     repositories: {}
-
-    # clusterCredentials:
-    # - name: gami-np
-    #   server: https://35.240.139.5
-    #   labels: {}
-    #   annotations: {}
-    #   config:
-    #     bearerToken: ref+vault://secret/common/jenkins/argocd#argocd-gami-nonprod-cluster-sa
-    #     tlsClientConfig:
-    #       insecure: true
     
 vaultProfiles:
   create: true
